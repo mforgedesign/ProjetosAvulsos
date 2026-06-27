@@ -221,6 +221,24 @@ body {
   margin-top: 1rem; font-size: .8rem; color: var(--muted);
   font-family: Consolas, "Lucida Console", monospace;
 }
+/* Loading progress bar */
+.loading-bar-wrap {
+  width: 100%; max-width: 280px;
+  margin: 1.2rem auto 0;
+  display: flex; align-items: center; gap: .7rem;
+}
+.loading-bar {
+  flex: 1; height: 6px; background: rgba(255,255,255,.1);
+  border-radius: 3px; overflow: hidden;
+}
+.loading-bar-fill {
+  height: 100%; width: 0%; background: var(--teal);
+  border-radius: 3px; transition: width .8s ease;
+}
+.loading-bar-label {
+  font-family: Consolas, "Lucida Console", monospace;
+  font-size: .72rem; color: var(--teal); min-width: 2.5rem; text-align: right;
+}
 
 /* ─── SCREEN 5: Result ─── */
 #screen-result {
@@ -414,7 +432,11 @@ body {
 <div id="screen-loading" class="screen noise">
   <div class="loader-ring"></div>
   <p id="loading-message"><span class="loading-dots">Reunindo os traços da sua jornada</span></p>
-  <p id="loading-sub">Não feche esta tela</p>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar"><div class="loading-bar-fill" id="loading-bar-fill"></div></div>
+    <span class="loading-bar-label" id="loading-bar-label">0%</span>
+  </div>
+  <p id="loading-sub">Isso pode levar até 2 minutos</p>
 </div>
 
 <!-- ═══ SCREEN 5: RESULT ═══ -->
@@ -780,21 +802,62 @@ function getSessionId() {
 const LOADING_MESSAGES = [
   'Reunindo os traços da sua jornada',
   'Comparando sua caminhada com personagens bíblicos',
+  'Percorrendo as evidências da sua vida devocional',
+  'Buscando no texto sagrado quem se parece com você',
+  'Analisando seus pontos fortes e de crescimento',
+  'Encontrando o perfil que mais combina',
   'Preparando um plano leve para os próximos 7 dias',
+  'Selecionando referências bíblicas coerentes',
   'Organizando leituras, reflexões e práticas',
-  'Quase pronto. Não feche esta tela.'
+  'Ajustando o plano ao seu momento espiritual',
+  'Garantindo que cada dia tenha algo simples e possível',
+  'Conectando as respostas com a sabedoria dos personagens',
+  'Montando o preparo para o próximo culto',
+  'Escrevendo a oração final com cuidado',
+  'Revisando o plano para que seja bíblico e responsável',
+  'Finalizando os detalhes do seu plano devocional',
+  'Quase pronto — mais alguns segundos',
+  'Não feche esta tela. O resultado está chegando.'
 ];
 
 let loadingInterval = null;
+let loadingBarInterval = null;
+let loadingElapsed = 0;
+const LOADING_MAX_MS = 120000; // 2 min expected max
+
+function updateLoadingBar() {
+  loadingElapsed += 500;
+  // Ease-out curve: fast at start, slows near 90%, jumps to 100% on done
+  const raw = Math.min(loadingElapsed / LOADING_MAX_MS, 1);
+  const pct = raw < 1 ? Math.round((1 - Math.pow(1 - raw, 2.5)) * 90) : 90;
+  const fill = document.getElementById('loading-bar-fill');
+  const label = document.getElementById('loading-bar-label');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = pct + '%';
+}
+
+function completeLoadingBar() {
+  const fill = document.getElementById('loading-bar-fill');
+  const label = document.getElementById('loading-bar-label');
+  if (fill) fill.style.width = '100%';
+  if (label) label.textContent = '100%';
+}
 
 async function generatePlan() {
   selectCharacter();
-  
+
   // Save answers
   localStorage.setItem(LS_ANSWERS, JSON.stringify(answers));
-  
+
   showScreen('screen-loading');
-  
+
+  // Reset loading bar
+  loadingElapsed = 0;
+  const fill = document.getElementById('loading-bar-fill');
+  const label = document.getElementById('loading-bar-label');
+  if (fill) fill.style.width = '0%';
+  if (label) label.textContent = '0%';
+
   // Animate loading messages
   let msgIdx = 0;
   loadingInterval = setInterval(() => {
@@ -806,6 +869,9 @@ async function generatePlan() {
       el.style.opacity = 1;
     }, 300);
   }, 3500);
+
+  // Animate loading bar
+  loadingBarInterval = setInterval(updateLoadingBar, 500);
   
   try {
     // POST to API
@@ -834,7 +900,7 @@ async function generatePlan() {
     await pollResult(data.requestId);
     
   } catch (err) {
-    clearInterval(loadingInterval);
+    clearInterval(loadingInterval); clearInterval(loadingBarInterval);
     showScreen('screen-error');
   }
 }
@@ -852,17 +918,18 @@ async function pollResult(reqId) {
       const data = await res.json();
       
       if (data.status === 'done') {
-        clearInterval(loadingInterval);
+        clearInterval(loadingInterval); clearInterval(loadingBarInterval);
         // Save plan
         localStorage.setItem(LS_PLAN, JSON.stringify(data.plan));
         localStorage.setItem(LS_PROGRESS, JSON.stringify({}));
+        completeLoadingBar();
         renderResult(data.plan);
         showScreen('screen-result');
         return;
       }
       
       if (data.status === 'error') {
-        clearInterval(loadingInterval);
+        clearInterval(loadingInterval); clearInterval(loadingBarInterval);
         showScreen('screen-error');
         return;
       }
@@ -879,7 +946,7 @@ async function pollResult(reqId) {
   }
   
   // Timeout
-  clearInterval(loadingInterval);
+  clearInterval(loadingInterval); clearInterval(loadingBarInterval);
   showScreen('screen-error');
 }
 
