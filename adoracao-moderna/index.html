@@ -840,12 +840,12 @@ async function generatePlan() {
 }
 
 async function pollResult(reqId) {
-  const maxAttempts = 80; // ~2 minutes at 1.5s intervals
+  const maxAttempts = 120; // ~2 minutes at 1.5s intervals
   let attempt = 0;
   
   while (attempt < maxAttempts) {
     attempt++;
-    await sleep(1500);
+    await sleep(2000);
     
     try {
       const res = await fetch(`${API_BASE}/api/devotional-plan/${reqId}`);
