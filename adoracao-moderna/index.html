@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Qual personagem bíblico define você?</title>
+<meta name="description" content="Responda perguntas rápidas e receba um plano devocional de 7 dias para conhecer mais a Deus.">
+<style>
+:root {
+  --paper: #ecebe5;
+  --paper-deep: #d8d7d0;
+  --ink: #101313;
+  --muted: #5e6563;
+  --teal: #00a9a1;
+  --teal-dark: #007c77;
+  --white: #fffef9;
+  --radius: 6px;
+  --transition: .3s cubic-bezier(.4,0,.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+  background: var(--ink);
+  color: var(--ink);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.screen { display: none; min-height: 100dvh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ─── Noise texture ─── */
+.noise::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  opacity: .035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+/* ─── SCREEN 1: Abertura ─── */
+#screen-welcome {
+  background: var(--ink);
+  color: var(--white);
+  justify-content: center; align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+  position: relative;
+}
+#screen-welcome .scratch {
+  position: absolute; top: 12%; right: 8%; width: 80px; height: 2px;
+  background: var(--teal); transform: rotate(-12deg); opacity: .5;
+}
+#screen-welcome .scratch2 {
+  position: absolute; bottom: 18%; left: 5%; width: 60px; height: 2px;
+  background: var(--teal); transform: rotate(8deg); opacity: .35;
+}
+#screen-welcome h1 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  position: relative; z-index: 1;
+}
+#screen-welcome h1 span { color: var(--teal); }
+#screen-welcome p {
+  font-size: 1.05rem; color: var(--paper-deep);
+  max-width: 340px; margin: 0 auto 2rem; line-height: 1.5;
+  position: relative; z-index: 1;
+}
+.microcopy {
+  font-family: Consolas, "Lucida Console", monospace;
+  font-size: .72rem; color: var(--muted);
+  letter-spacing: .05em; text-transform: uppercase;
+  position: relative; z-index: 1;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: .9rem 2rem; border: none; border-radius: var(--radius);
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: var(--transition);
+  text-transform: uppercase; letter-spacing: .04em;
+  position: relative; z-index: 1;
+}
+.btn-primary { background: var(--teal); color: var(--ink); }
+.btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
+.btn-secondary:hover { background: rgba(0,169,161,.1); }
+.btn-sm { padding: .6rem 1.2rem; font-size: .85rem; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* ─── SCREEN 2: Quiz ─── */
+#screen-quiz {
+  background: var(--paper);
+  padding: 0;
+}
+.quiz-header {
+  background: var(--ink); color: var(--white);
+  padding: 1rem 1.5rem;
+  font-family: Consolas, "Lucida Console", monospace;
+  font-size: .75rem; letter-spacing: .05em;
+}
+.quiz-header .progress-label { text-transform: uppercase; color: var(--teal); }
+.progress-bar {
+  width: 100%; height: 3px; background: var(--paper-deep);
+  position: relative; overflow: hidden;
+}
+.progress-bar .fill {
+  height: 100%; background: var(--teal);
+  transition: width .4s ease;
+}
+.quiz-body {
+  padding: 2rem 1.5rem 1.5rem;
+  flex: 1;
+}
+.quiz-body h2 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(1.3rem, 4.5vw, 1.7rem);
+  text-transform: uppercase;
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+}
+.option-card {
+  background: var(--white);
+  border: 2px solid var(--paper-deep);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin-bottom: .75rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+.option-card:hover { border-color: var(--teal); }
+.option-card.selected {
+  border-color: var(--teal);
+  background: rgba(0,169,161,.08);
+  box-shadow: 0 0 0 1px var(--teal);
+}
+.option-card.selected::after {
+  content: '✓'; position: absolute; top: .6rem; right: .8rem;
+  color: var(--teal); font-weight: 700; font-size: 1.1rem;
+}
+.option-card .letter {
+  display: inline-block; width: 1.6rem; height: 1.6rem;
+  border-radius: 50%; border: 1.5px solid var(--muted);
+  text-align: center; line-height: 1.5rem;
+  font-family: Consolas, "Lucida Console", monospace;
+  font-size: .7rem; font-weight: 700; color: var(--muted);
+  margin-right: .6rem; vertical-align: middle;
+  transition: var(--transition);
+}
+.option-card.selected .letter {
+  border-color: var(--teal); color: var(--teal); background: rgba(0,169,161,.12);
+}
+.option-card .opt-text { vertical-align: middle; line-height: 1.4; }
+.custom-field {
+  margin-top: 1rem;
+}
+.custom-field textarea {
+  width: 100%; border: 1.5px solid var(--paper-deep); border-radius: var(--radius);
+  padding: .8rem; font-family: inherit; font-size: .9rem; resize: none;
+  min-height: 60px; background: var(--white); color: var(--ink);
+  transition: var(--transition);
+}
+.custom-field textarea:focus { outline: none; border-color: var(--teal); }
+.custom-field label {
+  display: block; font-size: .8rem; color: var(--muted);
+  margin-bottom: .4rem; font-style: italic;
+}
+.quiz-nav {
+  display: flex; gap: .75rem; margin-top: 1.2rem;
+}
+.quiz-nav .btn { flex: 1; }
+
+/* ─── SCREEN 3: Review ─── */
+#screen-review {
+  background: var(--ink); color: var(--white);
+  justify-content: center; align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+}
+#screen-review h2 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  text-transform: uppercase; color: var(--teal);
+  margin-bottom: 1rem;
+}
+#screen-review p {
+  color: var(--paper-deep); font-size: 1rem;
+  max-width: 320px; margin: 0 auto 2rem; line-height: 1.5;
+}
+
+/* ─── SCREEN 4: Loading ─── */
+#screen-loading {
+  background: var(--ink); color: var(--white);
+  justify-content: center; align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+}
+.loader-ring {
+  width: 56px; height: 56px; border: 3px solid var(--paper-deep);
+  border-top-color: var(--teal); border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-message {
+  font-size: 1rem; color: var(--paper);
+  max-width: 300px; line-height: 1.5;
+  transition: opacity .4s;
+}
+.loading-dots::after {
+  content: ''; animation: dots 1.5s steps(4) infinite;
+}
+@keyframes dots {
+  0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
+}
+#loading-sub {
+  margin-top: 1rem; font-size: .8rem; color: var(--muted);
+  font-family: Consolas, "Lucida Console", monospace;
+}
+
+/* ─── SCREEN 5: Result ─── */
+#screen-result {
+  background: var(--ink); color: var(--white);
+  padding: 0;
+}
+.result-header {
+  text-align: center; padding: 2rem 1.5rem 1.5rem;
+  position: relative;
+}
+.result-header .char-img {
+  width: 120px; height: 160px; object-fit: contain;
+  margin: 0 auto 1rem; display: block;
+  filter: drop-shadow(0 4px 12px rgba(0,169,161,.25));
+}
+.result-header .char-fallback {
+  width: 120px; height: 160px; margin: 0 auto 1rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Impact, sans-serif; font-size: 4rem;
+  color: var(--teal); border: 2px solid var(--teal); border-radius: var(--radius);
+  background: rgba(0,169,161,.06);
+}
+.result-header h1 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(1.6rem, 5.5vw, 2.4rem);
+  text-transform: uppercase; margin-bottom: .3rem;
+}
+.result-header .headline {
+  color: var(--teal); font-size: 1rem; font-style: italic;
+}
+.result-section {
+  padding: 1.2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.result-section h3 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1rem; text-transform: uppercase; color: var(--teal);
+  letter-spacing: .04em; margin-bottom: .6rem;
+}
+.result-section p, .result-section li {
+  font-size: .92rem; line-height: 1.5; color: var(--paper);
+}
+.result-section ul { list-style: none; padding: 0; }
+.result-section li { padding: .3rem 0; }
+.result-section li::before { content: '→ '; color: var(--teal); }
+
+/* Plan day cards */
+.day-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius); margin-bottom: .75rem;
+  overflow: hidden; transition: var(--transition);
+}
+.day-card.completed { border-color: var(--teal); border-left: 3px solid var(--teal); }
+.day-card.next { border-color: var(--teal); }
+.day-card-header {
+  display: flex; align-items: center; padding: .8rem 1rem;
+  cursor: pointer; gap: .7rem;
+}
+.day-card-header .day-check {
+  width: 22px; height: 22px; border-radius: 4px;
+  border: 2px solid var(--muted); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition); cursor: pointer;
+}
+.day-card.completed .day-check {
+  border-color: var(--teal); background: var(--teal); color: var(--ink);
+}
+.day-card-header .day-title {
+  flex: 1; font-size: .9rem; font-weight: 700;
+}
+.day-card-header .day-num {
+  font-family: Consolas, monospace; font-size: .7rem; color: var(--muted);
+}
+.day-card-body {
+  padding: 0 1rem 1rem; display: none;
+}
+.day-card.expanded .day-card-body { display: block; }
+.day-card-body .focus { color: var(--teal); font-size: .85rem; margin-bottom: .5rem; font-style: italic; }
+.day-card-body .refs {
+  font-family: Consolas, monospace; font-size: .75rem; color: var(--muted);
+  margin-bottom: .6rem;
+}
+.day-card-body p { font-size: .88rem; line-height: 1.5; color: var(--paper); margin-bottom: .4rem; }
+.day-card-body .section-label {
+  font-family: Consolas, monospace; font-size: .68rem; text-transform: uppercase;
+  color: var(--teal); letter-spacing: .06em; margin-top: .6rem; margin-bottom: .2rem;
+}
+
+/* Plan progress bar */
+.plan-progress {
+  padding: 1rem 1.5rem; text-align: center;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.plan-progress .bar {
+  width: 100%; height: 6px; background: rgba(255,255,255,.1);
+  border-radius: 3px; overflow: hidden; margin-bottom: .4rem;
+}
+.plan-progress .bar-fill {
+  height: 100%; background: var(--teal); border-radius: 3px;
+  transition: width .5s ease;
+}
+.plan-progress .label {
+  font-family: Consolas, monospace; font-size: .75rem; color: var(--muted);
+}
+
+.result-actions {
+  padding: 1.2rem 1.5rem 2rem; text-align: center;
+  display: flex; flex-direction: column; gap: .6rem;
+}
+
+/* ─── SCREEN 6: Cached result ─── */
+#screen-cached {
+  background: var(--ink); color: var(--white);
+  justify-content: center; align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+}
+#screen-cached h2 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(1.3rem, 5vw, 1.8rem);
+  text-transform: uppercase; margin-bottom: 1.5rem;
+}
+
+/* ─── SCREEN 7: Error ─── */
+#screen-error {
+  background: var(--ink); color: var(--white);
+  justify-content: center; align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+}
+#screen-error h2 { color: #e74c3c; margin-bottom: 1rem;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 1.5rem; text-transform: uppercase;
+}
+#screen-error p { color: var(--paper-deep); margin-bottom: 1.5rem; max-width: 320px; line-height: 1.5; }
+
+/* ─── Animations ─── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn .5s ease both; }
+.fade-in-delay { animation: fadeIn .5s ease .15s both; }
+@keyframes typeIn { from { width: 0; } to { width: 100%; } }
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ─── Privacy notice ─── */
+.privacy-notice {
+  background: rgba(0,169,161,.08); border: 1px solid rgba(0,169,161,.2);
+  border-radius: var(--radius); padding: .7rem 1rem;
+  font-size: .78rem; color: var(--paper-deep); line-height: 1.4;
+  margin-top: 1.2rem; max-width: 340px; margin-left: auto; margin-right: auto;
+}
+.privacy-notice::before { content: '🔒 '; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SCREEN 1: WELCOME ═══ -->
+<div id="screen-welcome" class="screen active noise">
+  <div class="scratch"></div>
+  <div class="scratch2"></div>
+  <h1 class="fade-in">Qual personagem bíblico define <span>sua jornada</span>?</h1>
+  <p class="fade-in-delay">Responda algumas perguntas rápidas e receba um plano devocional de 7 dias para conhecer mais a Deus.</p>
+  <button class="btn btn-primary fade-in-delay" onclick="startQuiz()">Começar jornada</button>
+  <p class="microcopy fade-in-delay">Anônimo · Leve · Direto ao ponto</p>
+</div>
+
+<!-- ═══ SCREEN 2: QUIZ ═══ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-header">
+    <span class="progress-label" id="progress-label">Pergunta 1 de 10</span>
+    <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+  </div>
+  <div class="quiz-body" id="quiz-body"></div>
+</div>
+
+<!-- ═══ SCREEN 3: REVIEW ═══ -->
+<div id="screen-review" class="screen noise">
+  <h2 class="fade-in">Sua jornada está pronta</h2>
+  <p class="fade-in-delay">Agora vamos transformar suas respostas em um plano devocional de 7 dias, personalizado para você.</p>
+  <button class="btn btn-primary fade-in-delay" onclick="generatePlan()">Gerar meu plano</button>
+</div>
+
+<!-- ═══ SCREEN 4: LOADING ═══ -->
+<div id="screen-loading" class="screen noise">
+  <div class="loader-ring"></div>
+  <p id="loading-message"><span class="loading-dots">Reunindo os traços da sua jornada</span></p>
+  <p id="loading-sub">Não feche esta tela</p>
+</div>
+
+<!-- ═══ SCREEN 5: RESULT ═══ -->
+<div id="screen-result" class="screen">
+  <div id="result-content"></div>
+</div>
+
+<!-- ═══ SCREEN 6: CACHED ═══ -->
+<div id="screen-cached" class="screen noise">
+  <h2 class="fade-in">Seu plano ainda está aqui</h2>
+  <div style="display:flex;flex-direction:column;gap:.7rem;position:relative;z-index:1">
+    <button class="btn btn-primary" onclick="showCachedPlan()">Continuar meu plano</button>
+    <button class="btn btn-secondary" onclick="redojourney()">Refazer jornada</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 7: ERROR ═══ -->
+<div id="screen-error" class="screen noise">
+  <h2>Não foi possível gerar seu plano</h2>
+  <p>Ocorreu um erro ao processar suas respostas. Tente novamente em alguns instantes.</p>
+  <div style="display:flex;flex-direction:column;gap:.7rem">
+    <button class="btn btn-primary" onclick="retryGeneration()">Tentar novamente</button>
+    <a class="btn btn-secondary" href="https://wa.me/5511917146712?text=Oi%20Luiz%2C%20o%20plano%20devocional%20do%20QR%20Code%20falhou.%20Pode%20verificar%3F" target="_blank" rel="noopener">Avisar Luiz Fernando no WhatsApp</a>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const API_BASE = 'https://mforgedesign.duckdns.org';
+const LS_ANSWERS = 'adoracao_moderna_quiz_answers_v1';
+const LS_PLAN = 'adoracao_moderna_generated_plan_v1';
+const LS_PROGRESS = 'adoracao_moderna_plan_progress_v1';
+const LS_SESSION = 'adoracao_moderna_session_id_v1';
+
+// ═══════════════════════════════════════════
+// QUIZ DATA
+// ═══════════════════════════════════════════
+const QUESTIONS = [
+  {
+    id: 'q1',
+    text: 'Quando você pensa em se aproximar de Deus, o que mais combina com você hoje?',
+    options: [
+      { letter: 'A', text: 'Quero aprender a ouvir Deus com mais clareza.', tags: ['escuta', 'dependencia_de_Deus'] },
+      { letter: 'B', text: 'Quero voltar a ter constância na leitura e oração.', tags: ['constancia', 'preparo_culto'] },
+      { letter: 'C', text: 'Quero adorar com mais verdade, não só por costume.', tags: ['adoracao', 'reverencia'] },
+      { letter: 'D', text: 'Quero levar minha fé mais a sério no dia a dia.', tags: ['integridade', 'missao'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q2',
+    text: 'Antes de ir ao culto, o que normalmente acontece com você?',
+    options: [
+      { letter: 'A', text: 'Eu quase nunca me preparo espiritualmente antes.', tags: ['preparo_culto', 'arrependimento'] },
+      { letter: 'B', text: 'Eu tento me preparar, mas me distraio fácil.', tags: ['preparo_culto', 'constancia'] },
+      { letter: 'C', text: 'Eu gosto de chegar com o coração voltado para Deus.', tags: ['adoracao', 'reverencia'] },
+      { letter: 'D', text: 'Eu quero melhorar nisso, mas preciso de um caminho simples.', tags: ['aprendizado', 'constancia'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q3',
+    text: 'Quando você lê a Bíblia, qual frase mais se aproxima da sua realidade?',
+    options: [
+      { letter: 'A', text: 'Às vezes começo bem, mas não mantenho.', tags: ['constancia', 'aprendizado'] },
+      { letter: 'B', text: 'Leio, mas nem sempre paro para ouvir Deus no texto.', tags: ['escuta', 'intimidade'] },
+      { letter: 'C', text: 'Quero entender mais quem Deus é, não só buscar respostas.', tags: ['intimidade', 'reverencia'] },
+      { letter: 'D', text: 'Tenho dificuldade, mas quero criar esse hábito.', tags: ['aprendizado', 'dependencia_de_Deus'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q4',
+    text: 'Quando Deus parece em silêncio, você tende a…',
+    options: [
+      { letter: 'A', text: 'Ficar inquieto e procurar respostas rápidas.', tags: ['dependencia_de_Deus', 'constancia'] },
+      { letter: 'B', text: 'Continuar buscando, mesmo sem sentir muito.', tags: ['constancia', 'fidelidade'] },
+      { letter: 'C', text: 'Pedir direção e tentar obedecer o que já sabe.', tags: ['escuta', 'obediencia'] },
+      { letter: 'D', text: 'Lembrar que relacionamento também se constrói no silêncio.', tags: ['intimidade', 'reverencia'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q5',
+    text: 'Quando percebe que precisa mudar algo diante de Deus, o que mais combina com você?',
+    options: [
+      { letter: 'A', text: 'Eu sinto o peso, mas às vezes demoro para agir.', tags: ['arrependimento', 'constancia'] },
+      { letter: 'B', text: 'Eu tento corrigir e seguir em frente com Deus.', tags: ['integridade', 'arrependimento'] },
+      { letter: 'C', text: 'Eu preciso aprender a levar mais a sério pequenas coisas.', tags: ['reverencia', 'integridade'] },
+      { letter: 'D', text: 'Eu costumo transformar confronto em oração.', tags: ['intimidade', 'dependencia_de_Deus'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q6',
+    text: 'No seu relacionamento com Deus, você sente que precisa crescer mais em…',
+    options: [
+      { letter: 'A', text: 'Reverência.', tags: ['reverencia'] },
+      { letter: 'B', text: 'Constância.', tags: ['constancia'] },
+      { letter: 'C', text: 'Escuta.', tags: ['escuta'] },
+      { letter: 'D', text: 'Entrega.', tags: ['missao', 'dependencia_de_Deus'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q7',
+    text: 'Durante a semana, qual atitude parece mais possível para você começar agora?',
+    options: [
+      { letter: 'A', text: 'Ler um trecho bíblico com calma.', tags: ['escuta', 'constancia'] },
+      { letter: 'B', text: 'Separar um momento para orar antes do culto.', tags: ['preparo_culto', 'adoracao'] },
+      { letter: 'C', text: 'Anotar uma verdade sobre quem Deus é.', tags: ['intimidade', 'reverencia'] },
+      { letter: 'D', text: 'Obedecer uma direção simples que já entendi.', tags: ['obediencia', 'integridade'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q8',
+    text: 'Qual dessas frases mais confronta você?',
+    options: [
+      { letter: 'A', text: '"Eu participo, mas nem sempre me relaciono."', tags: ['intimidade', 'arrependimento'] },
+      { letter: 'B', text: '"Eu busco Deus mais quando preciso de algo."', tags: ['dependencia_de_Deus', 'reverencia'] },
+      { letter: 'C', text: '"Eu adoro, mas nem sempre preparo meu coração."', tags: ['adoracao', 'preparo_culto'] },
+      { letter: 'D', text: '"Eu sei o que preciso fazer, mas adio."', tags: ['constancia', 'obediencia'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q9',
+    text: 'Que tipo de plano devocional mais ajudaria você esta semana?',
+    options: [
+      { letter: 'A', text: 'Um plano para ouvir Deus melhor pela Palavra.', tags: ['escuta', 'aprendizado'] },
+      { letter: 'B', text: 'Um plano para criar constância.', tags: ['constancia', 'disciplina'] },
+      { letter: 'C', text: 'Um plano para adorar com mais verdade.', tags: ['adoracao', 'preparo_culto'] },
+      { letter: 'D', text: 'Um plano para viver fé com mais seriedade.', tags: ['integridade', 'missao'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  },
+  {
+    id: 'q10',
+    text: 'Ao terminar essa jornada, o que você mais quer levar para os próximos 7 dias?',
+    options: [
+      { letter: 'A', text: 'Quero conhecer Deus de forma mais real.', tags: ['intimidade', 'reverencia'] },
+      { letter: 'B', text: 'Quero preparar melhor minha adoração.', tags: ['adoracao', 'preparo_culto'] },
+      { letter: 'C', text: 'Quero ser constante, mesmo sem emoção forte.', tags: ['constancia', 'fidelidade'] },
+      { letter: 'D', text: 'Quero obedecer com mais coragem.', tags: ['coragem', 'missao'] }
+    ],
+    customLabel: 'Quer explicar com suas palavras?'
+  }
+];
+
+// ═══════════════════════════════════════════
+// CHARACTER DATA
+// ═══════════════════════════════════════════
+const CHARACTERS = {
+  isaias:        { name: 'Isaías',          file: 'isaias.png',        tags: ['reverencia','arrependimento','dependencia_de_Deus'], strength: 'Reverência e quebrantamento', growth: 'Aproximar-se de Deus com sinceridade' },
+  samuel:        { name: 'Samuel',          file: 'samuel.png',        tags: ['escuta','disponibilidade','dependencia_de_Deus'], strength: 'Sensibilidade à voz de Deus', growth: 'Aprender a discernir e responder' },
+  davi:          { name: 'Davi',            file: 'davi.png',          tags: ['adoracao','arrependimento','preparo_culto'], strength: 'Adoração sincera', growth: 'Preparar o coração antes do culto' },
+  daniel:        { name: 'Daniel',          file: 'daniel.png',        tags: ['constancia','integridade','disciplina'], strength: 'Constância devocional', growth: 'Permanecer fiel na rotina' },
+  jose:          { name: 'José',            file: 'jose.png',          tags: ['integridade','constancia','dependencia_de_Deus'], strength: 'Integridade no secreto', growth: 'Confiar em Deus nos processos' },
+  josue:         { name: 'Josué',           file: 'josue.png',         tags: ['coragem','obediencia','missao'], strength: 'Coragem obediente', growth: 'Firmar decisões espirituais' },
+  neemias:       { name: 'Neemias',         file: 'neemias.png',       tags: ['servico','preparo_culto','missao'], strength: 'Zelo por reconstrução', growth: 'Transformar incômodo em prática' },
+  ester:         { name: 'Ester',           file: 'ester.png',         tags: ['coragem','missao','responsabilidade'], strength: 'Coragem com propósito', growth: 'Assumir responsabilidade espiritual' },
+  rute:          { name: 'Rute',            file: 'rute.png',          tags: ['constancia','fidelidade','servico'], strength: 'Lealdade e constância', growth: 'Permanecer mesmo sem aplauso' },
+  'maria-betania': { name: 'Maria de Betânia', file: 'maria-betania.png', tags: ['escuta','intimidade','prioridade'], strength: 'Escuta e prioridade', growth: 'Escolher a presença acima da distração' },
+  'maria-madalena': { name: 'Maria Madalena', file: 'maria-madalena.png', tags: ['amor','intimidade','perseveranca'], strength: 'Amor perseverante por Cristo', growth: 'Reconhecer Jesus além da dor' },
+  joao:          { name: 'João',            file: 'joao.png',          tags: ['intimidade','amor','contemplacao'], strength: 'Intimidade e amor', growth: 'Aprofundar relacionamento com Cristo' },
+  barnabe:       { name: 'Barnabé',         file: 'barnabe.png',       tags: ['servico','encorajamento','comunhao'], strength: 'Encorajamento e serviço', growth: 'Servir sem buscar palco' },
+  timoteo:       { name: 'Timóteo',         file: 'timoteo.png',       tags: ['aprendizado','constancia','conviccao'], strength: 'Aprendizado e crescimento', growth: 'Fortalecer convicção' },
+  paulo:         { name: 'Paulo',           file: 'paulo.png',         tags: ['missao','transformacao','entrega'], strength: 'Transformação e missão', growth: 'Viver fé com direção e entrega' }
+};
+
+// Knowledge-of-God priority tags for tie-breaking
+const KNOW_GOD_TAGS = ['reverencia','intimidade','escuta','dependencia_de_Deus'];
+const PREPARE_TAGS = ['preparo_culto','adoracao'];
+const CHAR_ORDER = Object.keys(CHARACTERS);
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentQ = 0;
+let answers = [];
+let scores = {};
+let selectedChar = null;
+let requestId = null;
+
+// ═══════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ═══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════
+// QUIZ FLOW
+// ═══════════════════════════════════════════
+function startQuiz() {
+  // Check for cached plan
+  const cached = localStorage.getItem(LS_PLAN);
+  if (cached) {
+    showScreen('screen-cached');
+    return;
+  }
+  currentQ = 0;
+  answers = [];
+  scores = {};
+  renderQuestion();
+  showScreen('screen-quiz');
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  const body = document.getElementById('quiz-body');
+  const total = QUESTIONS.length;
+  
+  document.getElementById('progress-label').textContent = `Pergunta ${currentQ + 1} de ${total}`;
+  document.getElementById('progress-fill').style.width = ((currentQ) / total * 100) + '%';
+
+  const prevAnswer = answers[currentQ];
+  
+  let html = `<h2 class="fade-in">${q.text}</h2>`;
+  
+  if (currentQ === 0) {
+    html += `<div class="privacy-notice fade-in">Suas respostas não serão vistas por ninguém da igreja. Elas serão usadas apenas para gerar seu plano devocional neste aparelho.</div>`;
+  }
+  
+  q.options.forEach((opt, i) => {
+    const sel = prevAnswer && prevAnswer.option === opt.letter ? ' selected' : '';
+    html += `
+      <div class="option-card fade-in${sel}" data-letter="${opt.letter}" onclick="selectOption(this, '${opt.letter}')" style="animation-delay:${.08 * (i+1)}s">
+        <span class="letter">${opt.letter}</span>
+        <span class="opt-text">${opt.text}</span>
+      </div>`;
+  });
+  
+  const customVal = prevAnswer ? prevAnswer.custom || '' : '';
+  html += `
+    <div class="custom-field fade-in" style="animation-delay:.4s">
+      <label>${q.customLabel} (opcional)</label>
+      <textarea id="custom-answer" placeholder="Escreva livremente…">${customVal}</textarea>
+    </div>
+    <div class="quiz-nav fade-in" style="animation-delay:.5s">
+      ${currentQ > 0 ? '<button class="btn btn-secondary btn-sm" onclick="prevQuestion()">← Voltar</button>' : ''}
+      <button class="btn btn-primary" id="btn-continue" onclick="nextQuestion()" ${!prevAnswer ? 'disabled' : ''}>Continuar</button>
+    </div>`;
+  
+  body.innerHTML = html;
+}
+
+function selectOption(el, letter) {
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn-continue').disabled = false;
+  // Store selection temporarily
+  el.closest('.quiz-body').dataset.selected = letter;
+}
+
+function nextQuestion() {
+  const selected = document.querySelector('.option-card.selected');
+  if (!selected) return;
+  
+  const letter = selected.dataset.letter;
+  const custom = document.getElementById('custom-answer').value.trim();
+  const q = QUESTIONS[currentQ];
+  const opt = q.options.find(o => o.letter === letter);
+  
+  answers[currentQ] = {
+    questionId: q.id,
+    option: letter,
+    text: opt.text,
+    tags: opt.tags,
+    custom: custom
+  };
+  
+  // Accumulate scores
+  opt.tags.forEach(tag => {
+    scores[tag] = (scores[tag] || 0) + 1;
+  });
+  
+  currentQ++;
+  if (currentQ < QUESTIONS.length) {
+    renderQuestion();
+  } else {
+    showScreen('screen-review');
+  }
+}
+
+function prevQuestion() {
+  if (currentQ > 0) {
+    // Recalculate scores from scratch
+    scores = {};
+    for (let i = 0; i < currentQ - 1; i++) {
+      answers[i].tags.forEach(tag => { scores[tag] = (scores[tag] || 0) + 1; });
+    }
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════
+// CHARACTER SELECTION
+// ═══════════════════════════════════════════
+function selectCharacter() {
+  // Calculate compatibility scores
+  const compat = {};
+  for (const [id, char] of Object.entries(CHARACTERS)) {
+    let score = 0;
+    char.tags.forEach(tag => {
+      score += (scores[tag] || 0);
+    });
+    compat[id] = score;
+  }
+  
+  // Find max
+  const maxScore = Math.max(...Object.values(compat));
+  const tied = Object.entries(compat).filter(([_, s]) => s === maxScore).map(([id]) => id);
+  
+  if (tied.length === 1) {
+    selectedChar = tied[0];
+  } else {
+    // Tie-breaking: knowledge of God tags
+    const knowScores = {};
+    tied.forEach(id => {
+      knowScores[id] = CHARACTERS[id].tags.filter(t => KNOW_GOD_TAGS.includes(t)).length;
+    });
+    const maxKnow = Math.max(...Object.values(knowScores));
+    const knowTied = tied.filter(id => knowScores[id] === maxKnow);
+    
+    if (knowTied.length === 1) {
+      selectedChar = knowTied[0];
+    } else {
+      // Then prepare tags
+      const prepScores = {};
+      knowTied.forEach(id => {
+        prepScores[id] = CHARACTERS[id].tags.filter(t => PREPARE_TAGS.includes(t)).length;
+      });
+      const maxPrep = Math.max(...Object.values(prepScores));
+      const prepTied = knowTied.filter(id => prepScores[id] === maxPrep);
+      
+      // Then official order
+      selectedChar = prepTied.sort((a, b) => CHAR_ORDER.indexOf(a) - CHAR_ORDER.indexOf(b))[0];
+    }
+  }
+  
+  return selectedChar;
+}
+
+// ═══════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════
+function getSessionId() {
+  let sid = localStorage.getItem(LS_SESSION);
+  if (!sid) {
+    sid = 'sess_' + crypto.randomUUID?.() || 'sess_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    localStorage.setItem(LS_SESSION, sid);
+  }
+  return sid;
+}
+
+const LOADING_MESSAGES = [
+  'Reunindo os traços da sua jornada',
+  'Comparando sua caminhada com personagens bíblicos',
+  'Preparando um plano leve para os próximos 7 dias',
+  'Organizando leituras, reflexões e práticas',
+  'Quase pronto. Não feche esta tela.'
+];
+
+let loadingInterval = null;
+
+async function generatePlan() {
+  selectCharacter();
+  
+  // Save answers
+  localStorage.setItem(LS_ANSWERS, JSON.stringify(answers));
+  
+  showScreen('screen-loading');
+  
+  // Animate loading messages
+  let msgIdx = 0;
+  loadingInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % LOADING_MESSAGES.length;
+    const el = document.getElementById('loading-message');
+    el.style.opacity = 0;
+    setTimeout(() => {
+      el.innerHTML = `<span class="loading-dots">${LOADING_MESSAGES[msgIdx]}</span>`;
+      el.style.opacity = 1;
+    }, 300);
+  }, 3500);
+  
+  try {
+    // POST to API
+    const res = await fetch(`${API_BASE}/api/devotional-plan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getSessionId(),
+        version: '1.0.0',
+        selectedCharacter: selectedChar,
+        scores: scores,
+        answers: answers.map(a => ({
+          questionId: a.questionId,
+          selectedOption: a.option,
+          selectedText: a.text,
+          customAnswer: a.custom || ''
+        }))
+      })
+    });
+    
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    requestId = data.requestId;
+    
+    // Poll for result
+    await pollResult(data.requestId);
+    
+  } catch (err) {
+    clearInterval(loadingInterval);
+    showScreen('screen-error');
+  }
+}
+
+async function pollResult(reqId) {
+  const maxAttempts = 80; // ~2 minutes at 1.5s intervals
+  let attempt = 0;
+  
+  while (attempt < maxAttempts) {
+    attempt++;
+    await sleep(1500);
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/devotional-plan/${reqId}`);
+      const data = await res.json();
+      
+      if (data.status === 'done') {
+        clearInterval(loadingInterval);
+        // Save plan
+        localStorage.setItem(LS_PLAN, JSON.stringify(data.plan));
+        localStorage.setItem(LS_PROGRESS, JSON.stringify({}));
+        renderResult(data.plan);
+        showScreen('screen-result');
+        return;
+      }
+      
+      if (data.status === 'error') {
+        clearInterval(loadingInterval);
+        showScreen('screen-error');
+        return;
+      }
+      
+      // queued / processing — update message
+      if (data.status === 'queued') {
+        const el = document.getElementById('loading-message');
+        el.innerHTML = '<span class="loading-dots">Sua jornada entrou na fila. Preparando os planos na ordem de chegada</span>';
+      }
+      
+    } catch (err) {
+      // Network error — keep polling
+    }
+  }
+  
+  // Timeout
+  clearInterval(loadingInterval);
+  showScreen('screen-error');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function retryGeneration() {
+  if (requestId) {
+    showScreen('screen-loading');
+    loadingInterval = setInterval(() => {}, 99999); // dummy
+    pollResult(requestId).catch(() => showScreen('screen-error'));
+  } else {
+    generatePlan();
+  }
+}
+
+// ═══════════════════════════════════════════
+// RESULT RENDERING
+// ═══════════════════════════════════════════
+function renderResult(plan) {
+  const char = CHARACTERS[plan.characterId] || CHARACTERS[selectedChar];
+  const progress = JSON.parse(localStorage.getItem(LS_PROGRESS) || '{}');
+  const completedDays = Object.values(progress).filter(v => v).length;
+  
+  let html = `
+    <div class="result-header fade-in">
+      <img class="char-img" src="./assets/personagens/${char.file}" alt="${char.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="char-fallback" style="display:none">${char.name.charAt(0)}</div>
+      <h1>${plan.characterName || char.name}</h1>
+      <p class="headline">${plan.headline || ''}</p>
+    </div>`;
+  
+  // Profile summary
+  if (plan.profileSummary) {
+    html += `<div class="result-section fade-in"><h3>Perfil</h3><p>${plan.profileSummary}</p></div>`;
+  }
+  
+  // Strengths
+  if (plan.strengths?.length) {
+    html += `<div class="result-section fade-in"><h3>Pontos fortes</h3><ul>${plan.strengths.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+  }
+  
+  // Growth points
+  if (plan.growthPoints?.length) {
+    html += `<div class="result-section fade-in"><h3>Pontos de atenção</h3><ul>${plan.growthPoints.map(g => `<li>${g}</li>`).join('')}</ul></div>`;
+  }
+  
+  // Spiritual alert
+  if (plan.spiritualAlert) {
+    html += `<div class="result-section fade-in"><h3>Alerta espiritual</h3><p>${plan.spiritualAlert}</p></div>`;
+  }
+  
+  // 7-day plan
+  if (plan.days?.length) {
+    const nextDay = plan.days.findIndex((d, i) => !progress[i]);
+    html += `<div class="result-section"><h3>Plano devocional de 7 dias</h3>`;
+    
+    plan.days.forEach((day, i) => {
+      const done = progress[i] || false;
+      const isNext = i === nextDay;
+      const expanded = isNext || (i === 0 && nextDay === -1);
+      html += `
+        <div class="day-card${done ? ' completed' : ''}${isNext ? ' next' : ''}${expanded ? ' expanded' : ''}" data-day="${i}">
+          <div class="day-card-header" onclick="toggleDay(this)">
+            <div class="day-check" onclick="event.stopPropagation();toggleDayDone(${i})">${done ? '✓' : ''}</div>
+            <span class="day-title">${day.title}</span>
+            <span class="day-num">DIA ${day.day}</span>
+          </div>
+          <div class="day-card-body">
+            <p class="focus">${day.focus}</p>
+            <p class="refs">${(day.references || []).join(' · ')}</p>
+            <div class="section-label">Reflexão</div>
+            <p>${day.reflection}</p>
+            <div class="section-label">Prática</div>
+            <p>${day.practice}</p>
+            <div class="section-label">Oração</div>
+            <p>${day.prayer}</p>
+          </div>
+        </div>`;
+    });
+    
+    html += `</div>`;
+    
+    // Progress
+    html += `
+      <div class="plan-progress">
+        <div class="bar"><div class="bar-fill" style="width:${completedDays / 7 * 100}%"></div></div>
+        <p class="label">${completedDays} de 7 dias concluídos</p>
+      </div>`;
+  }
+  
+  // Worship preparation
+  if (plan.worshipPreparation) {
+    html += `<div class="result-section fade-in"><h3>Preparação para o próximo culto</h3><p>${plan.worshipPreparation}</p></div>`;
+  }
+  
+  // Final prayer
+  if (plan.finalPrayer) {
+    html += `<div class="result-section fade-in"><h3>Oração final</h3><p>${plan.finalPrayer}</p></div>`;
+  }
+  
+  // Completion message
+  if (completedDays === 7) {
+    html += `<div class="result-section fade-in" style="text-align:center"><p style="color:var(--teal);font-style:italic">Você concluiu a jornada. Agora não trate isso como o fim de um plano, mas como o começo de um relacionamento mais intencional com Deus.</p></div>`;
+  }
+  
+  // Actions
+  html += `
+    <div class="result-actions">
+      <button class="btn btn-secondary btn-sm" onclick="redojourney()">Refazer jornada</button>
+    </div>`;
+  
+  document.getElementById('result-content').innerHTML = html;
+}
+
+function toggleDay(header) {
+  const card = header.closest('.day-card');
+  card.classList.toggle('expanded');
+}
+
+function toggleDayDone(dayIdx) {
+  const progress = JSON.parse(localStorage.getItem(LS_PROGRESS) || '{}');
+  progress[dayIdx] = !progress[dayIdx];
+  localStorage.setItem(LS_PROGRESS, JSON.stringify(progress));
+  
+  // Re-render
+  const plan = JSON.parse(localStorage.getItem(LS_PLAN));
+  renderResult(plan);
+}
+
+function showCachedPlan() {
+  const plan = JSON.parse(localStorage.getItem(LS_PLAN));
+  if (plan) {
+    renderResult(plan);
+    showScreen('screen-result');
+  }
+}
+
+function redojourney() {
+  localStorage.removeItem(LS_ANSWERS);
+  localStorage.removeItem(LS_PLAN);
+  localStorage.removeItem(LS_PROGRESS);
+  localStorage.removeItem(LS_SESSION);
+  answers = [];
+  scores = {};
+  currentQ = 0;
+  selectedChar = null;
+  requestId = null;
+  renderQuestion();
+  showScreen('screen-quiz');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+(function init() {
+  const cachedPlan = localStorage.getItem(LS_PLAN);
+  if (cachedPlan) {
+    showScreen('screen-cached');
+  }
+})();
+</script>
+</body>
+</html>
