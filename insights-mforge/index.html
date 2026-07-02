@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>MForge — Radar Comercial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <main>
+    <section id="gate" class="gate">
+      <div class="gate-mark">MF</div>
+      <p class="eyebrow">INTELIGÊNCIA COMERCIAL</p>
+      <h1>Radar MForge</h1>
+      <p class="gate-copy">Insights triangulados entre a jornada da Susie e as conversas comerciais.</p>
+      <form id="unlock-form">
+        <label for="passphrase">Senha do painel</label>
+        <div class="password-row">
+          <input id="passphrase" type="password" autocomplete="current-password" required>
+          <button type="submit">Acessar</button>
+        </div>
+        <p id="gate-status" class="status" role="status"></p>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MFORGE DESIGN · RADAR COMERCIAL</p>
+          <h1>O que merece atenção hoje</h1>
+          <p id="updated-at" class="muted"></p>
+        </div>
+        <button id="lock" class="ghost">Bloquear</button>
+      </header>
+
+      <section id="kpis" class="kpi-grid" aria-label="Indicadores principais"></section>
+
+      <div class="dashboard-grid">
+        <section class="panel funnel-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">JORNADA SUSIE</p><h2>Funil do orçamento</h2></div>
+            <span id="funnel-period" class="pill"></span>
+          </div>
+          <div id="funnel" class="funnel"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">SINAIS RECORRENTES</p><h2>Objeções principais</h2></div></div>
+          <div id="objections" class="rank-list"></div>
+        </section>
+      </div>
+
+      <section class="panel opportunities-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">AÇÃO RECOMENDADA</p><h2>Oportunidades prioritárias</h2></div>
+          <span id="opportunity-count" class="pill"></span>
+        </div>
+        <div id="opportunities" class="opportunity-grid"></div>
+      </section>
+
+      <section class="panel conversations-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">ANÁLISE INDIVIDUAL</p><h2>Conversas e próximos passos</h2></div>
+          <input id="search" type="search" placeholder="Buscar nome, telefone ou insight">
+        </div>
+        <div id="conversations" class="conversation-list"></div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

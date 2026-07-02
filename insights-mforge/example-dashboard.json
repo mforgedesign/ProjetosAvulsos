@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-07-02T12:00:00-03:00",
+  "period": "Demonstração",
+  "coverage": { "analyzed": 1, "eligible": 1, "complete": true },
+  "kpis": [
+    { "label": "Leads na Susie", "value": 1, "note": "dados demonstrativos" }
+  ],
+  "funnel": [
+    { "label": "Nome + WhatsApp", "value": 1 },
+    { "label": "Clique no WhatsApp", "value": 1 }
+  ],
+  "objections": [],
+  "opportunities": [
+    { "score": 9, "title": "Exemplo", "detail": "Substituído pelo consolidador." }
+  ],
+  "conversations": [
+    {
+      "name": "Contato demonstrativo",
+      "phoneE164": "+5511999999999",
+      "stage": "Negociação",
+      "score": 9,
+      "insight": "Exemplo sem dados reais.",
+      "suggestedMessage": "Mensagem demonstrativa.",
+      "lastMessageAt": "2026-07-01T18:00:00Z",
+      "analysisUrl": ""
+    }
+  ]
+}
