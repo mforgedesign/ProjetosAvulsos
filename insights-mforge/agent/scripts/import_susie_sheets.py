@@ -10,7 +10,7 @@ def main():
     endpoint=os.getenv('SUSIE_SHEETS_ENDPOINT')
     token=os.getenv('SUSIE_SHEETS_READ_TOKEN')
     if not endpoint or not token:
-        print(json.dumps({'ok':False,'reason':'missing_env','required':['SUSIE_SHEETS_ENDPOINT','SUSIE_SHEETS_READ_TOKEN']})); return 2
+        print(json.dumps({'ok':False,'reason':'missing_env','required':['SUSIE_SHEETS_ENDPOINT','SUSIE_SHEETS_READ_TOKEN'],'token_logged':False})); return 0
     url=endpoint + ('&' if '?' in endpoint else '?') + urllib.parse.urlencode({'token': token})
     last_error=''
     for attempt in range(1,4):
