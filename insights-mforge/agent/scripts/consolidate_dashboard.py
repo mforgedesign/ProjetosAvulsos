@@ -98,7 +98,8 @@ def main():
     data=build_dashboard(); validate(data)
     WORK.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     if not os.getenv('DASHBOARD_PASSPHRASE'):
-        print(json.dumps({'ok':False,'reason':'missing_DASHBOARD_PASSPHRASE','dashboard_json':str(WORK),'committed':False}, ensure_ascii=False)); return 2
+        WORK.unlink(missing_ok=True)
+        print(json.dumps({'ok':False,'reason':'missing_DASHBOARD_PASSPHRASE','dashboard_json_removed':True,'committed':False}, ensure_ascii=False)); return 0
     proc=subprocess.run(['node','insights-mforge/scripts/encrypt-dashboard.mjs',str(WORK),'insights-mforge/data/insights.enc.json'], cwd=REPO, text=True, capture_output=True, env=os.environ.copy())
     WORK.unlink(missing_ok=True)
     if proc.returncode: print(proc.stderr or proc.stdout, file=sys.stderr); return proc.returncode
