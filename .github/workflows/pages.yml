@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Verify GitHub Pages
 
 on:
   push:
@@ -7,28 +7,27 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  verify-pages:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload static artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - name: Verify static files exist
+        run: |
+          test -f insights-mforge/index.html
+          test -f insights-mforge/app.js
+          test -f insights-mforge/scripts/encrypt-dashboard.mjs
+      - name: Wait for GitHub Pages to serve this commit
+        run: |
+          url="https://mforgedesign.github.io/ProjetosAvulsos/insights-mforge/?v=${GITHUB_SHA}"
+          for i in $(seq 1 30); do
+            code=$(curl -L -s -o /tmp/page.html -w '%{http_code}' "$url" || true)
+            if [ "$code" = "200" ] && grep -q 'Radar MForge' /tmp/page.html; then
+              echo "Pages online: $url"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Pages did not serve expected panel in time" >&2
+          exit 1
