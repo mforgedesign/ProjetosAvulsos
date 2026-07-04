@@ -104,6 +104,16 @@ def scan(args):
         for path in sorted(conversations.rglob("*")):
             if not path.is_file() or path.name.startswith(".") or path.suffix.lower() not in (".md", ".txt", ".json") or any(str(path).endswith(s) for s in SKIP_SUFFIXES):
                 continue
+            if path.name.startswith("status@broadcast"):
+                db.execute("""
+                    INSERT INTO conversations(source_path, conversation_key, source_hash, status, priority, attempts, updated_at, last_error)
+                    VALUES (?, ?, ?, 'discarded', -100, 0, ?, 'broadcast/status: descartado do radar comercial')
+                    ON CONFLICT(source_path) DO UPDATE SET
+                      status='discarded', priority=-100, claimed_at=NULL, next_attempt_at=NULL,
+                      updated_at=excluded.updated_at, last_error='broadcast/status: descartado do radar comercial'
+                """, (str(path), hashlib.sha256(str(path.resolve()).encode()).hexdigest()[:16], hashlib.sha256(read_text(path).encode("utf-8")).hexdigest(), iso()))
+                count += 1
+                continue
             meta = file_meta(path)
             if args.since and meta["last_message_at"] and meta["last_message_at"][:10] < args.since:
                 continue
