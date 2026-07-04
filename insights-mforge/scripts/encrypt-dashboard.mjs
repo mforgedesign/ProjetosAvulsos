@@ -8,7 +8,7 @@ if (!inputFile || !outputFile || !passphrase) {
   console.error("Uso: DASHBOARD_PASSPHRASE='...' node encrypt-dashboard.mjs entrada.json saida.enc.json");
   process.exit(2);
 }
-if (passphrase.length < 16) throw new Error("DASHBOARD_PASSPHRASE deve ter pelo menos 16 caracteres.");
+if (passphrase.length < 8) throw new Error("DASHBOARD_PASSPHRASE deve ter pelo menos 8 caracteres.");
 
 const plaintext = await fs.readFile(inputFile);
 JSON.parse(plaintext.toString("utf8"));
