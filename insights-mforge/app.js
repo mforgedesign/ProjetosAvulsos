@@ -79,6 +79,18 @@ function render(data) {
   $("#opportunities").replaceChildren(...(data.opportunities || []).map(item => element("article", "opportunity", `
     <span class="score">${escapeHtml(item.score)}/10</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.detail)}</p>`)));
   renderConversations(data.conversations || []);
+  renderCrm(data.crm || {});
+}
+
+function renderCrm(crm) {
+  const stages = crm.stages || {};
+  const total = Object.values(stages).reduce((sum, value) => sum + Number(value || 0), 0);
+  $("#crm-db-status").textContent = crm.generatedAt ? `CRM · ${new Date(crm.generatedAt).toLocaleString("pt-BR")}` : "CRM local";
+  $("#crm-stage-grid").replaceChildren(...Object.entries(stages).sort((a,b) => Number(b[1])-Number(a[1])).map(([stage, count]) => element("div", "stage-card", `<span>${escapeHtml(stage)}</span><strong>${escapeHtml(count)}</strong><small>${total ? Math.round(Number(count)/total*100) : 0}%</small>`)));
+  $("#crm-approvals").textContent = escapeHtml(crm.approvalsPending ?? 0);
+  $("#crm-outbox").textContent = escapeHtml(crm.capiShadow ?? 0);
+  $("#crm-conflicts").textContent = escapeHtml(crm.identityConflictsOpen ?? 0);
+  $("#crm-unmatched").textContent = escapeHtml(crm.unmatchedLeads ?? 0);
 }
 
 function renderConversations(items) {

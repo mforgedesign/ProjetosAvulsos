@@ -40,6 +40,20 @@
 
       <section id="kpis" class="kpi-grid" aria-label="Indicadores principais"></section>
 
+      <section class="panel crm-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">CRM OPERACIONAL</p><h2>Estados, aprovações e CAPI</h2></div>
+          <span id="crm-db-status" class="pill"></span>
+        </div>
+        <div id="crm-stage-grid" class="stage-grid"></div>
+        <div class="mini-grid">
+          <div><strong id="crm-approvals">0</strong><span>Aprovações pendentes</span></div>
+          <div><strong id="crm-outbox">0</strong><span>Eventos CAPI em shadow</span></div>
+          <div><strong id="crm-conflicts">0</strong><span>Conflitos identidade</span></div>
+          <div><strong id="crm-unmatched">0</strong><span>Leads sem telefone</span></div>
+        </div>
+      </section>
+
       <div class="dashboard-grid">
         <section class="panel funnel-panel">
           <div class="panel-heading">
