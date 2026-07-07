@@ -49,12 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
     songsList: document.getElementById('songsList')
   };
 
+  // Chaves de armazenamento exclusivas para esta playlist
+  const STORAGE_KEYS = {
+    browserId: `playlistConvidado:browserId:${cleanTitle}`,
+    likedSongs: `playlistConvidado:likedSongs:${cleanTitle}`
+  };
+
   // 3. Estado Local da Aplicação
   let songsList = [];
-  const storageKey = `liked_songs_${cleanTitle}`;
-  let likedSongs = loadLikedIds();
   let isSubmitting = false;
-  let likingIds = new Set(); // Evitar cliques concorrentes
+  let likingIds = new Set(); // Evitar cliques concorrentes de likes
+  let likedSongs = loadLikedIds(); // IDs curtidas no LocalStorage
+  const browserId = getBrowserId(); // ID única do navegador para a planilha
 
   // ==========================================================================
   // INICIALIZAÇÃO DE EVENTOS
@@ -70,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // CHAMADAS DE API (GOOGLE APPS SCRIPT)
   // ==========================================================================
 
-  // Buscar músicas
+  // Buscar músicas (GET)
   async function fetchPlaylist(options = {}) {
     if (!config.apiUrl) {
       showError("URL da API do Google Apps Script não configurada.");
@@ -88,98 +94,110 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.refreshBtn.disabled = true;
 
     try {
-      // Usar query string GET para contornar problemas de CORS no Apps Script
       const timestamp = Date.now();
-      const response = await fetch(`${config.apiUrl}?action=list&_=${timestamp}`, {
+      const separator = config.apiUrl.includes('?') ? '&' : '?';
+      const response = await fetch(`${config.apiUrl}${separator}action=list&_=${timestamp}`, {
         method: 'GET',
-        mode: 'cors',
-        cache: 'no-store'
+        cache: 'no-store',
+        redirect: 'follow'
       });
 
-      if (!response.ok) throw new Error("Erro na comunicação com a planilha");
-
-      const data = await response.json();
-      
-      if (data.error) {
-        showError(data.error);
-        return;
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('O servidor respondeu em um formato inesperado. Verifique o Apps Script.');
       }
 
-      songsList = Array.isArray(data) ? data : [];
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Não foi possível carregar a lista.');
+      }
+
+      // O script Code.gs retorna as músicas na chave .songs
+      songsList = Array.isArray(data.songs) ? data.songs : [];
       renderSongs();
       renderMatches();
 
     } catch (error) {
       console.error("Erro ao buscar playlist:", error);
       if (!options.silent) {
-        showError("Não foi possível carregar a lista de músicas. Verifique sua conexão.");
+        showError(error.message || "Não foi possível carregar a lista de músicas.");
       }
     } finally {
       elements.refreshBtn.disabled = false;
     }
   }
 
-  // Enviar Sugestão
+  // Enviar Sugestão (POST)
   async function addSong(songName) {
     isSubmitting = true;
     setSubmittingState(true);
     clearStatus();
 
     try {
-      // 1. Sincronizar silenciosamente antes para garantir que ninguém adicionou enquanto digitava
+      // 1. Sincronizar silenciosamente antes para garantir que ninguém adicionou enquanto o usuário digitava
       await fetchPlaylist({ silent: true });
 
-      const duplicate = findExactDuplicate(songName);
-      if (duplicate) {
+      const duplicateBeforeSubmit = findExactDuplicate(songName);
+      if (duplicateBeforeSubmit) {
         showStatus('Essa música acabou de aparecer na lista! Dê um like nela.', 'info');
-        highlightSongElement(duplicate.id);
+        highlightSongElement(duplicateBeforeSubmit.id);
         return;
       }
 
-      // 2. Enviar nova sugestão
-      const encodedSong = encodeURIComponent(songName);
-      const response = await fetch(`${config.apiUrl}?action=add&song=${encodedSong}`, {
-        method: 'GET',
-        mode: 'cors'
+      // 2. Enviar nova sugestão usando POST com Content-Type text/plain para contornar pre-flight CORS OPTIONS
+      const response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'suggest', song: songName }),
+        cache: 'no-store',
+        redirect: 'follow'
       });
 
-      if (!response.ok) throw new Error("Erro ao salvar música");
-
-      const data = await response.json();
-
-      if (data.error) {
-        showStatus(data.error, 'info');
-        if (data.id) {
-          highlightSongElement(data.id);
-        }
-        return;
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('O servidor respondeu em formato inválido no cadastro.');
       }
 
-      // Sucesso
-      showStatus("Música sugerida com sucesso! Você pode sugerir outra.", "success");
-      elements.form.reset();
-      elements.charCount.textContent = '0/120';
-      elements.input.focus();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Não foi possível enviar a sugestão.');
+      }
 
-      // Recarregar
+      if (data.duplicate) {
+        showStatus('Essa música já havia sido sugerida. Mantivemos apenas uma versão.', 'info');
+      } else {
+        showStatus("Música adicionada com sucesso! Você já pode sugerir outra.", "success");
+        elements.form.reset();
+        elements.charCount.textContent = '0/120';
+        elements.input.focus();
+      }
+
+      // 3. Recarregar lista silenciosamente e destacar a nova música
       await fetchPlaylist({ silent: true });
+      const newSongId = data.song ? data.song.id : '';
+      renderSongs(newSongId);
+      renderMatches();
 
     } catch (error) {
       console.error("Erro ao adicionar música:", error);
-      showStatus("Erro ao enviar sua sugestão. Tente novamente.", "error");
+      showStatus(error.message || "Erro ao enviar sua sugestão. Tente novamente.", "error");
     } finally {
       isSubmitting = false;
       setSubmittingState(false);
     }
   }
 
-  // Registrar Like
-  async function registerLike(songId, songName) {
+  // Registrar Curtida (POST)
+  async function registerLike(songId) {
     if (likedSongs.has(songId) || likingIds.has(songId)) return;
 
     likingIds.add(songId);
     
-    // Atualização otimista
+    // Atualização otimista local
     const songIndex = songsList.findIndex(s => s.id === songId);
     let originalLikes = 0;
     if (songIndex >= 0) {
@@ -192,21 +210,37 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSongs();
 
     try {
-      const response = await fetch(`${config.apiUrl}?action=like&id=${songId}`, {
-        method: 'GET',
-        mode: 'cors'
+      // Usar POST com Content-Type text/plain para contornar pre-flight CORS OPTIONS
+      const response = await fetch(config.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'like', songId: songId, browserId: browserId }),
+        cache: 'no-store',
+        redirect: 'follow'
       });
 
-      if (!response.ok) throw new Error("Erro de servidor ao registrar like");
-
-      const data = await response.json();
-      if (data.success) {
-        // Atualiza com os likes reais do servidor
-        if (songIndex >= 0) {
-          songsList[songIndex].likes = data.likes;
-        }
-        renderSongs(songId);
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Formato inválido de resposta de voto.');
       }
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'Erro ao registrar voto.');
+      }
+
+      // Se o servidor retornar o registro da música atualizada, aplica os likes finais
+      if (data.song && songIndex >= 0) {
+        songsList[songIndex].likes = data.song.likes;
+      }
+      
+      if (data.alreadyLiked) {
+        showStatus('Você já curtiu essa música de outro dispositivo/navegador.', 'info');
+      }
+
+      renderSongs(songId);
     } catch (error) {
       console.error("Erro ao curtir música:", error);
       // Reverter otimismo se der erro
@@ -216,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       likedSongs.delete(songId);
       saveLikedIds();
       renderSongs();
-      showStatus("Falha ao registrar voto. Verifique a conexão.", "error");
+      showStatus(error.message || "Falha ao registrar voto.", "error");
     } finally {
       likingIds.delete(songId);
     }
@@ -253,14 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (normalizedQuery.length < 2) return [];
 
     return songsList
-      .filter(song => normalizeText(song.title).includes(normalizedQuery))
+      .filter(song => normalizeText(song.name).includes(normalizedQuery))
       .slice(0, 5);
   }
 
   function findExactDuplicate(value) {
     const normalized = normalizeText(value);
     if (!normalized) return null;
-    return songsList.find(song => normalizeText(song.title) === normalized) || null;
+    return songsList.find(song => normalizeText(song.name) === normalized) || null;
   }
 
   // ==========================================================================
@@ -268,11 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
 
   function renderSongs(highlightId = '') {
-    // Ordenar decrescente por likes e alfabeticamente por nome em caso de empate
+    // No script Code.gs, a ordenação decrescente de likes e por tempo já vem do servidor,
+    // mas ordenamos aqui de forma otimista local para garantir atualizações perfeitas.
     const sortedSongs = [...songsList].sort((a, b) => {
       const likesDiff = Number(b.likes || 0) - Number(a.likes || 0);
       if (likesDiff !== 0) return likesDiff;
-      return String(a.title).localeCompare(String(b.title), 'pt-BR');
+      // Em caso de empate de likes, ordenar pela mais recente
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
     elements.songCount.textContent = `${sortedSongs.length} ${sortedSongs.length === 1 ? 'sugestão' : 'sugestões'}`;
@@ -294,14 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <article class="song-card" id="song-${song.id}">
           <div class="rank">${index + 1}</div>
           <div class="song-info">
-            <p class="song-name">${escapeHtml(song.title)}</p>
+            <p class="song-name">${escapeHtml(song.name)}</p>
             <p class="song-meta">Sugestão dos convidados</p>
           </div>
           <button
             type="button"
             class="like-btn ${isLiked ? 'liked' : ''}"
             data-like-id="${song.id}"
-            aria-label="${isLiked ? 'Você já curtiu' : 'Curtir'} ${escapeHtml(song.title)}"
+            aria-label="${isLiked ? 'Você já curtiu' : 'Curtir'} ${escapeHtml(song.name)}"
             ${isLiked || isLiking ? 'disabled' : ''}
           >
             ${isLiking ? '…' : `${isLiked ? '♥' : '♡'} ${Number(song.likes || 0)}`}
@@ -310,16 +346,15 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }).join('');
 
-    // Escutar eventos de clique nos botões de like
+    // Escutar cliques de likes
     elements.songsList.querySelectorAll('.like-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-like-id');
-        const song = songsList.find(s => s.id === id);
-        if (song) registerLike(id, song.title);
+        registerLike(id);
       });
     });
 
-    // Rolar até o item destacado se aplicável
+    // Rolar até o item destacado
     if (highlightId) {
       requestAnimationFrame(() => {
         const card = document.getElementById(`song-${highlightId}`);
@@ -343,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <p class="matches-title">Veja se sua música já está aqui:</p>
       ${matches.map(song => `
         <div class="match-item">
-          <span>${escapeHtml(song.title)}</span>
+          <span>${escapeHtml(song.name)}</span>
           <span class="match-likes">♥ ${Number(song.likes || 0)}</span>
         </div>`).join('')}
     `;
@@ -351,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // FUNÇÕES AUXILIARES
+  // FUNÇÕES AUXILIARES / UTILITÁRIAS
   // ==========================================================================
 
   function hexToHsl(hex) {
@@ -399,9 +434,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return title.toLowerCase().replace(/[^a-z0-9]/g, '_');
   }
 
+  function getBrowserId() {
+    let id = localStorage.getItem(STORAGE_KEYS.browserId);
+    if (id) return id;
+
+    id = window.crypto && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `browser_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    localStorage.setItem(STORAGE_KEYS.browserId, id);
+    return id;
+  }
+
   function loadLikedIds() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.likedSongs) || '[]');
       return new Set(Array.isArray(parsed) ? parsed : []);
     } catch {
       return new Set();
@@ -409,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function saveLikedIds() {
-    localStorage.setItem(storageKey, JSON.stringify([...likedSongs]));
+    localStorage.setItem(STORAGE_KEYS.likedSongs, JSON.stringify([...likedSongs]));
   }
 
   function highlightSongElement(id) {
