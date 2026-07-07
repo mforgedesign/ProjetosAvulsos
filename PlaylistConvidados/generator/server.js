@@ -63,7 +63,7 @@ app.get('/api/playlists', (req, res) => {
         primaryColor: primaryColor,
         apiUrl: apiUrl,
         localUrl: `/playlists/${folder}/index.html`,
-        githubUrl: `https://mforgedesign.github.io/ProjetosAvulsos/playlists/${folder}/`
+        githubUrl: `https://mforgedesign.github.io/ProjetosAvulsos/PlaylistConvidados/playlists/${folder}/`
       };
     });
 
@@ -176,7 +176,7 @@ window.PLAYLIST_CONFIG = {
         title: title,
         primaryColor: color,
         localUrl: `/playlists/${cleanFolderName}/index.html`,
-        githubUrl: `https://mforgedesign.github.io/ProjetosAvulsos/playlists/${cleanFolderName}/`
+        githubUrl: `https://mforgedesign.github.io/ProjetosAvulsos/PlaylistConvidados/playlists/${cleanFolderName}/`
       }
     });
 
