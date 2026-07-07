@@ -110,12 +110,21 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('O servidor respondeu em um formato inesperado. Verifique o Apps Script.');
       }
 
-      if (!response.ok || !data.ok) {
+      if (!response.ok) {
         throw new Error(data.error || 'Não foi possível carregar a lista.');
       }
 
-      // O script Code.gs retorna as músicas na chave .songs
-      songsList = Array.isArray(data.songs) ? data.songs : [];
+      // RETROCOMPATIBILIDADE: Tratar se data é um array direto ou objeto { ok: true, songs: [...] }
+      if (Array.isArray(data)) {
+        songsList = data;
+      } else if (data && data.ok && Array.isArray(data.songs)) {
+        songsList = data.songs;
+      } else if (data && data.error) {
+        throw new Error(data.error);
+      } else {
+        throw new Error('Não foi possível processar a lista de sugestões.');
+      }
+
       renderSongs();
       renderMatches();
 
@@ -129,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Enviar Sugestão (POST)
+  // Enviar Sugestão (POST com fallback para GET)
   async function addSong(songName) {
     isSubmitting = true;
     setSubmittingState(true);
@@ -163,12 +172,30 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('O servidor respondeu em formato inválido no cadastro.');
       }
 
-      if (!response.ok || !data.ok) {
+      // RETROCOMPATIBILIDADE: Se o POST retornar erro de ação inválida (indicando que o usuário roda a versão antiga do script que só aceita GET)
+      if (data && data.ok === false && (data.error || '').includes('Ação POST inválida')) {
+        // Tentar fallback para GET
+        const encodedSong = encodeURIComponent(songName);
+        const separator = config.apiUrl.includes('?') ? '&' : '?';
+        const getResponse = await fetch(`${config.apiUrl}${separator}action=add&song=${encodedSong}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        const getText = await getResponse.text();
+        const getData = JSON.parse(getText);
+
+        if (!getResponse.ok || getData.error) {
+          throw new Error(getData.error || 'Não foi possível enviar a sugestão via GET.');
+        }
+
+        data = { ok: true, song: getData };
+      } else if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Não foi possível enviar a sugestão.');
       }
 
       if (data.duplicate) {
-        showStatus('Essa música já havia sido sugerida. Mantivemos apenas uma versão.', 'info');
+        showStatus('Essa música já havia sido sugerida. Mantime-se a versão da lista.', 'info');
       } else {
         showStatus("Música adicionada com sucesso! Você já pode sugerir outra.", "success");
         elements.form.reset();
@@ -191,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Registrar Curtida (POST)
+  // Registrar Curtida (POST com fallback para GET)
   async function registerLike(songId) {
     if (likedSongs.has(songId) || likingIds.has(songId)) return;
 
@@ -227,7 +254,24 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Formato inválido de resposta de voto.');
       }
 
-      if (!response.ok || !data.ok) {
+      // RETROCOMPATIBILIDADE: Se o POST retornar erro de ação inválida (indicando que o usuário roda a versão antiga do script que só aceita GET)
+      if (data && data.ok === false && (data.error || '').includes('Ação POST inválida')) {
+        // Tentar fallback para GET
+        const separator = config.apiUrl.includes('?') ? '&' : '?';
+        const getResponse = await fetch(`${config.apiUrl}${separator}action=like&id=${songId}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+
+        const getText = await getResponse.text();
+        const getData = JSON.parse(getText);
+
+        if (!getResponse.ok || getData.error) {
+          throw new Error(getData.error || 'Erro ao registrar voto via GET.');
+        }
+
+        data = { ok: true, song: getData };
+      } else if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Erro ao registrar voto.');
       }
 
@@ -287,14 +331,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (normalizedQuery.length < 2) return [];
 
     return songsList
-      .filter(song => normalizeText(song.name).includes(normalizedQuery))
+      .filter(song => normalizeText(song.name || song.title).includes(normalizedQuery))
       .slice(0, 5);
   }
 
   function findExactDuplicate(value) {
     const normalized = normalizeText(value);
     if (!normalized) return null;
-    return songsList.find(song => normalizeText(song.name) === normalized) || null;
+    return songsList.find(song => normalizeText(song.name || song.title) === normalized) || null;
   }
 
   // ==========================================================================
@@ -308,7 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const likesDiff = Number(b.likes || 0) - Number(a.likes || 0);
       if (likesDiff !== 0) return likesDiff;
       // Em caso de empate de likes, ordenar pela mais recente
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return 0;
     });
 
     elements.songCount.textContent = `${sortedSongs.length} ${sortedSongs.length === 1 ? 'sugestão' : 'sugestões'}`;
@@ -325,19 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.songsList.innerHTML = sortedSongs.map((song, index) => {
       const isLiked = likedSongs.has(song.id);
       const isLiking = likingIds.has(song.id);
+      const songTitle = song.name || song.title || '';
 
       return `
         <article class="song-card" id="song-${song.id}">
           <div class="rank">${index + 1}</div>
           <div class="song-info">
-            <p class="song-name">${escapeHtml(song.name)}</p>
+            <p class="song-name">${escapeHtml(songTitle)}</p>
             <p class="song-meta">Sugestão dos convidados</p>
           </div>
           <button
             type="button"
             class="like-btn ${isLiked ? 'liked' : ''}"
             data-like-id="${song.id}"
-            aria-label="${isLiked ? 'Você já curtiu' : 'Curtir'} ${escapeHtml(song.name)}"
+            aria-label="${isLiked ? 'Você já curtiu' : 'Curtir'} ${escapeHtml(songTitle)}"
             ${isLiked || isLiking ? 'disabled' : ''}
           >
             ${isLiking ? '…' : `${isLiked ? '♥' : '♡'} ${Number(song.likes || 0)}`}
@@ -376,11 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     elements.matches.innerHTML = `
       <p class="matches-title">Veja se sua música já está aqui:</p>
-      ${matches.map(song => `
-        <div class="match-item">
-          <span>${escapeHtml(song.name)}</span>
-          <span class="match-likes">♥ ${Number(song.likes || 0)}</span>
-        </div>`).join('')}
+      ${matches.map(song => {
+        const songTitle = song.name || song.title || '';
+        return `
+          <div class="match-item">
+            <span>${escapeHtml(songTitle)}</span>
+            <span class="match-likes">♥ ${Number(song.likes || 0)}</span>
+          </div>`;
+      }).join('')}
     `;
     elements.matches.classList.add('visible');
   }
@@ -434,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return title.toLowerCase().replace(/[^a-z0-9]/g, '_');
   }
 
+  // Identificador exclusivo de navegador para a tabela de curtidas
   function getBrowserId() {
     let id = localStorage.getItem(STORAGE_KEYS.browserId);
     if (id) return id;
