@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Enviar Sugestão (POST com fallback para GET)
+  // Enviar Sugestão (GET)
   async function addSong(songName) {
     isSubmitting = true;
     setSubmittingState(true);
@@ -155,11 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 2. Enviar nova sugestão usando POST com Content-Type text/plain para contornar pre-flight CORS OPTIONS
-      const response = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'suggest', song: songName }),
+      // 2. Enviar nova sugestão usando GET para contornar problemas de CORS no POST do Apps Script
+      const encodedSong = encodeURIComponent(songName);
+      const separator = config.apiUrl.includes('?') ? '&' : '?';
+      const response = await fetch(`${config.apiUrl}${separator}action=suggest&song=${encodedSong}`, {
+        method: 'GET',
         cache: 'no-store',
         redirect: 'follow'
       });
@@ -172,30 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('O servidor respondeu em formato inválido no cadastro.');
       }
 
-      // RETROCOMPATIBILIDADE: Se o POST retornar erro de ação inválida (indicando que o usuário roda a versão antiga do script que só aceita GET)
-      if (data && data.ok === false && (data.error || '').includes('Ação POST inválida')) {
-        // Tentar fallback para GET
-        const encodedSong = encodeURIComponent(songName);
-        const separator = config.apiUrl.includes('?') ? '&' : '?';
-        const getResponse = await fetch(`${config.apiUrl}${separator}action=add&song=${encodedSong}`, {
-          method: 'GET',
-          mode: 'cors'
-        });
-
-        const getText = await getResponse.text();
-        const getData = JSON.parse(getText);
-
-        if (!getResponse.ok || getData.error) {
-          throw new Error(getData.error || 'Não foi possível enviar a sugestão via GET.');
-        }
-
-        data = { ok: true, song: getData };
-      } else if (!response.ok || !data.ok) {
+      // Tratamento de sucesso unificado (GET)
+      if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Não foi possível enviar a sugestão.');
       }
 
       if (data.duplicate) {
-        showStatus('Essa música já havia sido sugerida. Mantime-se a versão da lista.', 'info');
+        showStatus('Essa música já havia sido sugerida. Mantivemos a versão da lista.', 'info');
       } else {
         showStatus("Música adicionada com sucesso! Você já pode sugerir outra.", "success");
         elements.form.reset();
@@ -218,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Registrar Curtida (POST com fallback para GET)
+  // Registrar Curtida (GET)
   async function registerLike(songId) {
     if (likedSongs.has(songId) || likingIds.has(songId)) return;
 
@@ -237,11 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSongs();
 
     try {
-      // Usar POST com Content-Type text/plain para contornar pre-flight CORS OPTIONS
-      const response = await fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'like', songId: songId, browserId: browserId }),
+      // Usar GET para registrar curtidas, evitando pre-flight OPTIONS e erros de CORS
+      const separator = config.apiUrl.includes('?') ? '&' : '?';
+      const response = await fetch(`${config.apiUrl}${separator}action=like&songId=${songId}&browserId=${browserId}`, {
+        method: 'GET',
         cache: 'no-store',
         redirect: 'follow'
       });
@@ -254,24 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Formato inválido de resposta de voto.');
       }
 
-      // RETROCOMPATIBILIDADE: Se o POST retornar erro de ação inválida (indicando que o usuário roda a versão antiga do script que só aceita GET)
-      if (data && data.ok === false && (data.error || '').includes('Ação POST inválida')) {
-        // Tentar fallback para GET
-        const separator = config.apiUrl.includes('?') ? '&' : '?';
-        const getResponse = await fetch(`${config.apiUrl}${separator}action=like&id=${songId}`, {
-          method: 'GET',
-          mode: 'cors'
-        });
-
-        const getText = await getResponse.text();
-        const getData = JSON.parse(getText);
-
-        if (!getResponse.ok || getData.error) {
-          throw new Error(getData.error || 'Erro ao registrar voto via GET.');
-        }
-
-        data = { ok: true, song: getData };
-      } else if (!response.ok || !data.ok) {
+      if (!response.ok || !data.ok) {
         throw new Error(data.error || 'Erro ao registrar voto.');
       }
 
