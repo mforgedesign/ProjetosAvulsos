@@ -1,0 +1,22 @@
+{
+  "name": "motor-playlist-convidados",
+  "version": "1.0.0",
+  "description": "Motor e gerador local para playlists de convidados integradas ao Google Apps Script",
+  "main": "generator/server.js",
+  "scripts": {
+    "start": "node generator/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "playlist",
+    "guests",
+    "wedding",
+    "generator",
+    "google-apps-script"
+  ],
+  "author": "Antigravity AI",
+  "license": "ISC"
+}

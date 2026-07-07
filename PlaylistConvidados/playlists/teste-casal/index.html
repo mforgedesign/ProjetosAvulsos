@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playlist de Convidados</title>
+  
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Container de Configuração do Tema Dinâmico -->
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="playlist-badge">Sugestões de Músicas</div>
+        <h1 id="playlist-title">Playlist de Convidados</h1>
+        <p class="header-subtitle">Escolha as músicas que não podem faltar no nosso evento. Vote nas suas favoritas ou sugira uma nova!</p>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Seção de Busca e Sugestão -->
+      <section class="action-card">
+        <div class="card-glow"></div>
+        <div class="card-content">
+          <h2>Sugerir Nova Música</h2>
+          <p class="helper-text">Insira uma música por vez (Nome + Artista) e clique em sugerir.</p>
+          
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="song-input" 
+              placeholder="Ex: Coldplay - Viva La Vida..." 
+              autocomplete="off"
+            >
+            <button id="btn-suggest" class="btn-primary">
+              <span class="btn-text">Sugerir</span>
+              <span class="spinner" style="display: none;"></span>
+            </button>
+          </div>
+          
+          <!-- Lista de Sugestão de Busca (Combater redundâncias em tempo real) -->
+          <div id="search-feedback" class="search-feedback" style="display: none;">
+            <div class="feedback-icon">⚠️</div>
+            <div class="feedback-message">
+              Essa música já está na lista! Você pode dar um like nela abaixo para subir de posição.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção da Lista de Músicas -->
+      <section class="playlist-section">
+        <div class="section-header">
+          <h3 class="section-title">Mais Votadas <span class="total-songs" id="total-songs-badge">0</span></h3>
+          <button id="btn-refresh" class="btn-icon" title="Atualizar Playlist">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rotate-cw"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </button>
+        </div>
+
+        <!-- Estado de Carregamento (Loading State) -->
+        <div id="loading-state" class="loading-state">
+          <div class="spinner-large"></div>
+          <p>Carregando as músicas...</p>
+        </div>
+
+        <!-- Estado Vazio (Empty State) -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <div class="empty-icon">🎵</div>
+          <h4>Nenhuma música sugerida ainda</h4>
+          <p>Seja o primeiro a sugerir uma música incrível para a nossa festa!</p>
+        </div>
+
+        <!-- Lista Principal -->
+        <ul id="playlist-list" class="playlist-list" style="display: none;">
+          <!-- Item Exemplo para referência visual (Será limpo no JS) -->
+        </ul>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Desenvolvido com carinho para o seu grande dia</p>
+    </footer>
+  </div>
+
+  <!-- Script de Configuração Específico (Gerado dinamicamente) -->
+  <script src="config.js"></script>
+  <!-- Script Principal -->
+  <script src="script.js"></script>
+</body>
+</html>

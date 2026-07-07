@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador do Motor de Playlist</title>
+  
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    
+    <!-- Painel Lateral: Instruções e Configuração do Apps Script -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-icon">⚙️</span>
+          <h2>Motor de Playlist</h2>
+        </div>
+        <p class="brand-subtitle">Gerador de Páginas de Sugestão de Músicas</p>
+      </div>
+
+      <div class="instructions-card">
+        <h3>🚀 Como configurar o Banco de Dados?</h3>
+        <ol class="steps-list">
+          <li>
+            <strong>Crie uma Planilha Google:</strong>
+            Crie uma planilha em branco. Opcionalmente, adicione na primeira linha os cabeçalhos: <code>ID</code> na coluna A, <code>Musica</code> na B e <code>Likes</code> na C.
+          </li>
+          <li>
+            <strong>Abra o Apps Script:</strong>
+            Na planilha, clique em <code>Extensões</code> &gt; <code>Apps Script</code>.
+          </li>
+          <li>
+            <strong>Cole o código do Backend:</strong>
+            Substitua todo o conteúdo do editor pelo código presente no arquivo <code>apps-script/codigo.gs</code> deste projeto.
+          </li>
+          <li>
+            <strong>Implante como Web App:</strong>
+            Clique em <code>Implantar</code> &gt; <code>Nova implantação</code>. Escolha <code>App da Web</code> (na engrenagem).
+          </li>
+          <li>
+            <strong>Defina as permissões de acesso:</strong>
+            Configure <em>"Executar como"</em> para <code>Você</code> e <em>"Quem tem acesso"</em> para <code>Qualquer pessoa</code>.
+          </li>
+          <li>
+            <strong>Obtenha o URL da API:</strong>
+            Conclua a implantação, copie a <strong>URL do App da Web</strong> gerada e cole no formulário de geração ao lado.
+          </li>
+        </ol>
+        
+        <button type="button" id="btn-copy-gs" class="btn-secondary-admin">
+          <span>📋 Copiar Código (.gs)</span>
+        </button>
+
+        <div class="alert alert-info">
+          💡 O Google Sheets funciona como banco de dados em tempo real e gratuito!
+        </div>
+      </div>
+    </aside>
+
+    <!-- Painel Principal: Formulário e Playlists Ativas -->
+    <main class="admin-main">
+      <header class="main-header">
+        <h1>Painel de Controle</h1>
+        <p class="subtitle">Crie e gerencie playlists de convidados para os seus convites interativos.</p>
+      </header>
+
+      <!-- Formulário de Criação -->
+      <section class="admin-card">
+        <div class="card-glow"></div>
+        <h2>Criar Nova Playlist</h2>
+        
+        <form id="playlist-form" class="form-grid">
+          
+          <div class="form-group">
+            <label for="input-title">Título da Playlist</label>
+            <input 
+              type="text" 
+              id="input-title" 
+              placeholder="Ex: Casamento de Maria & João" 
+              required
+            >
+            <span class="help-desc">Título exibido no topo da página de música.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="input-folder">Nome da Pasta (slug)</label>
+            <input 
+              type="text" 
+              id="input-folder" 
+              placeholder="Ex: maria-e-joao" 
+              required
+            >
+            <span class="help-desc">Nome do diretório final no GitHub Pages (letras minúsculas e hífens).</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="input-api">URL do Web App do Apps Script</label>
+            <input 
+              type="url" 
+              id="input-api" 
+              placeholder="https://script.google.com/macros/s/.../exec" 
+              required
+            >
+            <span class="help-desc">A URL gerada na implantação do seu Google Apps Script.</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Cor Predominante</label>
+            
+            <div class="color-selection-wrapper">
+              <!-- Seletor nativo -->
+              <div class="native-picker-wrapper">
+                <input type="color" id="input-color" value="#6366f1">
+                <span id="color-hex-label">#6366f1</span>
+              </div>
+              
+              <!-- Paletas pré-definidas premium -->
+              <div class="preset-palettes">
+                <span class="presets-title">Sugestões Premium:</span>
+                <div class="palette-buttons">
+                  <button type="button" class="btn-palette" data-color="#ec4899" title="Rose Sunset" style="background-color: #ec4899;"></button>
+                  <button type="button" class="btn-palette" data-color="#b45309" title="Classic Gold" style="background-color: #b45309;"></button>
+                  <button type="button" class="btn-palette" data-color="#0f766e" title="Forest Green" style="background-color: #0f766e;"></button>
+                  <button type="button" class="btn-palette" data-color="#1d4ed8" title="Royal Blue" style="background-color: #1d4ed8;"></button>
+                  <button type="button" class="btn-palette" data-color="#6366f1" title="Neon Violet (Default)" style="background-color: #6366f1;"></button>
+                  <button type="button" class="btn-palette" data-color="#f43f5e" title="Elegant Ruby" style="background-color: #f43f5e;"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions full-width">
+            <button type="submit" id="btn-submit" class="btn-primary-admin">
+              <span>Gerar Playlist</span>
+              <div class="spinner-admin" style="display: none;"></div>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Lista de Playlists Ativas -->
+      <section class="admin-card playlist-manager-section">
+        <h2>Playlists Geradas</h2>
+        <p class="card-desc">Lista de playlists criadas localmente prontas para envio/commit no repositório.</p>
+        
+        <div id="playlists-loading" class="list-loading">
+          <div class="spinner-admin"></div>
+          <p>Carregando playlists existentes...</p>
+        </div>
+
+        <div id="playlists-empty" class="list-empty" style="display: none;">
+          <p>Nenhuma playlist gerada ainda. Use o formulário acima para criar a primeira!</p>
+        </div>
+
+        <div class="table-container" id="playlists-table-wrapper" style="display: none;">
+          <table class="playlists-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Pasta</th>
+                <th>Cor</th>
+                <th>Links de Acesso</th>
+              </tr>
+            </thead>
+            <tbody id="playlists-list-body">
+              <!-- Inserido dinamicamente via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+  </div>
+  
+  <script src="app.js"></script>
+</body>
+</html>

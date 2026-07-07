@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8fd">
+  <meta name="description" content="Sugira músicas para a festa e curta as favoritas dos convidados.">
+  <title>Playlist dos Convidados</title>
+
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <!-- Partículas Flutuantes -->
+    <div class="particles" aria-hidden="true">
+      <span class="particle" style="width:5px;height:5px;background:rgba(203,175,228,.6);left:6%;top:10%;animation-duration:7s"></span>
+      <span class="particle" style="width:4px;height:4px;background:rgba(86,55,136,.35);left:88%;top:16%;animation-duration:8.4s;animation-delay:1s"></span>
+      <span class="particle" style="width:5px;height:5px;background:rgba(203,175,228,.5);left:50%;top:5%;animation-duration:6.6s;animation-delay:2.2s"></span>
+      <span class="particle" style="width:4px;height:4px;background:rgba(86,55,136,.3);left:18%;top:88%;animation-duration:9.1s;animation-delay:1.6s"></span>
+      <span class="particle" style="width:5px;height:5px;background:rgba(203,175,228,.45);left:80%;top:80%;animation-duration:7.8s;animation-delay:3.4s"></span>
+    </div>
+
+    <div class="content">
+      <header class="header">
+        <p class="eyebrow" id="playlist-badge">playlist dos convidados</p>
+        <h1 id="playlist-title">Escolha a trilha da festa</h1>
+        <p class="subtitle" id="playlist-subtitle">Sugira uma música por vez e curta as favoritas para ajudar a montar uma playlist inesquecível.</p>
+      </header>
+
+      <div class="divider" aria-hidden="true">
+        <span class="divider-line"></span>
+        <span class="divider-dot"></span>
+        <span class="divider-dot"></span>
+        <span class="divider-dot"></span>
+        <span class="divider-line"></span>
+      </div>
+
+      <!-- Painel de Sugestão -->
+      <section class="panel" aria-labelledby="suggestion-title">
+        <div class="panel-title-row">
+          <div class="icon-box" aria-hidden="true">♫</div>
+          <div>
+            <p class="section-label">Sua sugestão</p>
+            <h2 id="suggestion-title">Qual música não pode faltar?</h2>
+            <p class="section-desc">Digite e confirme apenas uma música por vez. Depois, você poderá enviar outra.</p>
+          </div>
+        </div>
+
+        <form id="suggestionForm" novalidate onsubmit="return false;">
+          <label class="field-label" for="songInput">Música e artista</label>
+          <div class="input-wrap">
+            <input
+              id="songInput"
+              name="song"
+              type="text"
+              maxlength="120"
+              autocomplete="off"
+              placeholder="Ex.: Evidências — Chitãozinho & Xororó"
+              aria-describedby="songHelper"
+              required
+            >
+            <span class="char-count" id="charCount">0/120</span>
+          </div>
+
+          <p class="helper" id="songHelper">
+            <span aria-hidden="true">✦</span>
+            Enquanto você digita, verificamos sugestões parecidas para evitar repetições.
+          </p>
+
+          <!-- Feedback de Busca/Redundâncias -->
+          <div class="matches" id="matches" aria-live="polite"></div>
+
+          <button class="primary-btn" id="submitBtn" type="submit">
+            Confirmar sugestão
+          </button>
+
+          <!-- Toast/Notificação de Status Interna -->
+          <div class="status" id="formStatus" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <!-- Painel de Lista de Músicas -->
+      <section class="panel" aria-labelledby="songs-title">
+        <div class="panel-title-row">
+          <div class="icon-box" aria-hidden="true">♥</div>
+          <div>
+            <p class="section-label">Mais pedidas</p>
+            <h2 id="songs-title">Sugestões dos convidados</h2>
+            <p class="section-desc">Cada navegador pode curtir uma vez cada música.</p>
+          </div>
+        </div>
+
+        <div class="list-toolbar">
+          <span class="count-pill" id="songCount">0 sugestões</span>
+          <button class="refresh-btn" id="refreshBtn" type="button">↻ Atualizar</button>
+        </div>
+
+        <!-- Lista Principal -->
+        <div class="songs-list" id="songsList" aria-live="polite">
+          <div class="loading-state">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            Carregando sugestões...
+          </div>
+        </div>
+      </section>
+
+      <p class="footer-note">As sugestões são sincronizadas com a lista do evento. Curtidas ficam associadas a este navegador.</p>
+    </div>
+  </main>
+
+  <!-- Scripts de Configuração e Lógica -->
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
