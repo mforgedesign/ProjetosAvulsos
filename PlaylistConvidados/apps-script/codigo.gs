@@ -11,12 +11,26 @@ function doGet(e) {
   try {
     const action = String((e && e.parameter && e.parameter.action) || 'list').toLowerCase();
 
-    if (action !== 'list') {
-      return jsonResponse_({ ok: false, error: 'Ação GET inválida.' });
+    ensureSheets_();
+
+    // 1. Listagem de músicas
+    if (action === 'list') {
+      return jsonResponse_({ ok: true, songs: listSongs_() });
     }
 
-    ensureSheets_();
-    return jsonResponse_({ ok: true, songs: listSongs_() });
+    // 2. Sugestão de música (com suporte a GET para evitar CORS)
+    if (action === 'suggest') {
+      return jsonResponse_(suggestSong_(e.parameter.song));
+    }
+
+    // 3. Curtida de música (com suporte a GET para evitar CORS)
+    if (action === 'like') {
+      const songId = e.parameter.songId || e.parameter.id;
+      const browserId = e.parameter.browserId;
+      return jsonResponse_(likeSong_(songId, browserId));
+    }
+
+    return jsonResponse_({ ok: false, error: 'Ação GET inválida.' });
   } catch (error) {
     return jsonResponse_({ ok: false, error: friendlyError_(error) });
   }
