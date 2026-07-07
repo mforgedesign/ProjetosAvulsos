@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -135,10 +136,41 @@ window.PLAYLIST_CONFIG = {
 
     fs.writeFileSync(path.join(targetDir, 'config.js'), configContent, 'utf8');
 
-    // 4. Retornar resposta de sucesso
+    // 4. Executar deploy automático no GitHub Pages
+    let gitSuccess = true;
+    let gitMessage = '';
+    
+    try {
+      const status = execSync('git status --porcelain', { cwd: PROJECT_ROOT }).toString().trim();
+      if (status) {
+        execSync('git add .', { cwd: PROJECT_ROOT });
+        const commitMsg = `feat(playlist): deploy automatico da playlist ${title} (${cleanFolderName})`;
+        execSync(`git commit -m "${commitMsg}"`, { cwd: PROJECT_ROOT });
+        
+        // Tentar pull rebase preventivo para evitar rejeição de branches
+        try {
+          execSync('git pull origin main --rebase', { cwd: PROJECT_ROOT });
+        } catch (pullErr) {
+          console.warn('Aviso: Falha no git pull rebase de deploy:', pullErr.message);
+        }
+        
+        execSync('git push', { cwd: PROJECT_ROOT });
+        gitMessage = 'Enviado para o GitHub com sucesso! O build do GitHub Pages foi iniciado.';
+      } else {
+        gitMessage = 'Playlist atualizada localmente. Nenhuma nova alteração detectada para deploy.';
+      }
+    } catch (gitErr) {
+      console.error('Erro no deploy automático do Git:', gitErr);
+      gitSuccess = false;
+      gitMessage = `Playlist criada localmente, mas falhou ao enviar para o GitHub: ${gitErr.message}`;
+    }
+
+    // 5. Retornar resposta de sucesso
     res.json({
       success: true,
-      message: `Playlist "${title}" gerada com sucesso!`,
+      gitSuccess: gitSuccess,
+      message: gitSuccess ? `Playlist "${title}" gerada e publicada com sucesso!` : `Playlist "${title}" gerada localmente.`,
+      gitMessage: gitMessage,
       data: {
         folderName: cleanFolderName,
         title: title,

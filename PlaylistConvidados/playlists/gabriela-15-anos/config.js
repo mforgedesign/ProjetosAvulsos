@@ -3,6 +3,6 @@
  */
 window.PLAYLIST_CONFIG = {
   title: "Gabriela 15 Anos",
-  apiUrl: "https://script.google.com/macros/s/AKfycbzQ-tJ1FpNx09NoTYJvEf2hNpiyEBN2k8-fB3LoqrwZxIAc2RqaxbL4Z8QouCyP8paUbA/exec",
-  primaryColor: "#7a4fb3"
+  apiUrl: "https://script.google.com/macros/s/AKfycbx3B1jhiwLWX2Z0lMIKmkfTsiIiejZuquERqGNUnh2aFjjDPPvr0NnEPKgiUXXdY62ocQ/exec",
+  primaryColor: "#ec4899"
 };

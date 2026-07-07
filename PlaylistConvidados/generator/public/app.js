@@ -162,7 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(result.error || "Ocorreu um erro no servidor ao gerar.");
       }
 
-      showToast(result.message || "Playlist gerada com sucesso!", "success");
+      if (result.gitSuccess) {
+        showToast(result.message || "Playlist gerada com sucesso!", "success");
+        if (result.gitMessage) {
+          setTimeout(() => showToast(result.gitMessage, "success"), 1200);
+        }
+      } else {
+        showToast(result.message || "Playlist gerada localmente.", "success");
+        if (result.gitMessage) {
+          setTimeout(() => showToast(result.gitMessage, "error"), 1200);
+        }
+      }
       
       // Limpar formulário de forma amigável
       inputTitle.value = '';
